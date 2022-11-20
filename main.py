@@ -1,25 +1,21 @@
-import pymongo
+from sensor.configuration.mongo_db_connection import MongoDBClient
+from sensor.exception import SensorException
+import os,sys
+from sensor.logger import logging
+from sensor.pipeline import training_pipeline
+from sensor.pipeline.training_pipeline import TrainPipeline
+import os
+from sensor.utils.main_utils import read_yaml_file
+def set_env_variable(env_file_path):
+    env_config = read_yaml_file(env_file_path)
+    os.environ['MONGO_DB_URL']=env_config['MONGO_DB_URL']
 
-# Provide the mongodb localhost url to connect python to mongodb.
-client = pymongo.MongoClient("mongodb://localhost:27017/neurolabDB")
-
-# Database Name
-dataBase = client["neurolabDB"]
-
-# Collection  Name
-collection = dataBase['Products']
-
-# Sample data
-d = {'companyName': 'iNeuron',
-     'product': 'Affordable AI',
-     'courseOffered': 'Machine Learning with Deployment'}
-
-# Insert above records in the collection
-rec = collection.insert_one(d)
-
-# Lets Verify all the record at once present in the record with all the fields
-all_record = collection.find()
-
-# Printing all records present in the collection
-for idx, record in enumerate(all_record):
-     print(f"{idx}: {record}")
+if __name__ == '__main__':
+    try:
+        env_file_path = "/config/workspace/env.yaml"
+        set_env_variable(env_file_path)
+        training_pipeline = TrainPipeline()
+        training_pipeline.run_pipeline()
+    except Exception as e:
+        print(e)
+        logging.exception(e)
